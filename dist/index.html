@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0e141d">
+  <meta name="description" content="Send a file from one screen to another device's camera. Browser-only visual transfer with frame recovery and verified downloads.">
+  <title>Beam — Visual file transfer</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%238fbaff'/%3E%3Cpath d='M8 8h7v7H8zm10 0h6v7h-6zM8 18h7v6H8zm10 0h3v3h3v3h-6z' fill='%230e141d'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./vendor/qrcode.js" defer></script>
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <header class="header">
+    <a href="./" class="brand" aria-label="Beam home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 3h10v10H3zm16 0h10v10H19zM3 19h10v10H3zm16 0h4v4h6v6H19z"/></svg>beam<span class="brand-divider"></span><span class="brand-caption">VISUAL FILE TRANSFER</span></a>
+    <span class="local-label"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="8" width="14" height="10" rx="2"/><path d="M6 8V5a4 4 0 0 1 8 0v3"/></svg>Files stay on your devices</span>
+  </header>
+  <main>
+    <div class="title-row"><div><p class="eyebrow">SCREEN → CAMERA</p><h1>Move files with light.</h1></div><span class="version">BEAM / 01</span></div>
+    <nav class="mode-switch" aria-label="Transfer mode">
+      <button id="send-tab" class="mode active" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17V4m-5 5 5-5 5 5M5 16v4h14v-4"/></svg>Send a file</button>
+      <button id="receive-tab" class="mode" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v13m-5-5 5 5 5-5M5 17v3h14v-3"/></svg>Receive a file</button>
+    </nav>
+
+    <section id="send-panel" class="workspace" aria-label="Send a file">
+      <div class="controls">
+        <div class="section-heading"><span class="step-number">01</span><h2>Choose what to send</h2></div>
+        <div class="input-switch" aria-label="Content to send"><button id="file-mode" class="active" aria-pressed="true">Document / file</button><button id="text-mode" aria-pressed="false">Paste text</button></div>
+        <label id="dropzone" class="dropzone" for="file-input">
+          <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M20 4H8v28h20V12L20 4Z M20 4v8h8 M18 26V17m-4 4 4-4 4 4"/></svg>
+          <strong id="file-label">Drop a file here</strong><span id="file-detail">or click to browse · up to 10 MiB</span>
+          <input id="file-input" type="file" aria-label="Choose file to send">
+        </label>
+        <div id="text-entry" hidden><label class="field-label" for="text-input">Your text <span id="text-size">0 B</span></label><textarea id="text-input" rows="5" placeholder="Type or paste text in any language…" spellcheck="false" aria-describedby="text-help"></textarea><p id="text-help" class="hint">The receiver can copy the text or save it as a .txt file.</p></div>
+        <div class="section-heading settings-heading"><span class="step-number">02</span><h2>Set the pace</h2></div>
+        <label class="field-label" for="speed">Display speed <span id="speed-value">10 fps</span></label>
+        <input id="speed" type="range" min="2" max="30" step="1" value="10">
+        <div class="range-labels"><span>Steadier</span><span>Faster</span></div>
+        <label class="field-label density-label" for="density">Code density</label>
+        <select id="density"><option value="384">Low · easier to scan</option><option value="720" selected>Balanced · 720 bytes</option><option value="1024">High · 1,024 bytes</option></select>
+        <label class="field-label density-label parallel-label" for="code-count">Codes at once</label><select id="code-count"><option value="1">One · largest scan target</option><option value="2">Two · higher capacity</option></select>
+        <p class="hint">If progress stalls, lower the speed or move the camera closer.</p>
+        <button id="send-start" class="primary" disabled>Choose a file to begin <span aria-hidden="true">↗</span></button>
+        <p id="send-message" class="message" role="status">On the other device, open Beam and choose Receive.</p>
+        <div class="local-note">No file upload. No pairing. Just your screen and a camera.</div>
+      </div>
+      <div class="stage-column">
+        <div id="send-stage" class="stage">
+          <div class="stage-toolbar"><span id="send-status" class="status-label">READY WHEN YOU ARE</span><button id="fullscreen" class="icon-button" aria-label="Expand code to fullscreen" title="Fullscreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button></div>
+          <div id="empty-code" class="empty-code"><div class="viewfinder"><svg viewBox="0 0 80 80" aria-hidden="true"><rect x="12" y="12" width="20" height="20" rx="1"/><rect x="48" y="12" width="20" height="20" rx="1"/><rect x="12" y="48" width="20" height="20" rx="1"/><path d="M48 48h8v8h12v12H48z"/></svg></div><h3>Your file becomes a signal.</h3><p>Choose a file, then point the receiving<br>camera at the code that appears here.</p></div>
+          <div id="qr-wrap" class="qr-wrap" hidden><canvas id="qr-canvas" aria-label="Animated QR code that carries the selected content"></canvas><canvas id="qr-canvas-2" aria-label="Second animated QR code" hidden></canvas></div>
+          <div class="stage-bottom"><span id="send-frame">Waiting for a file</span><span id="send-loop">AUTO REPEAT</span></div>
+        </div>
+        <div class="metrics"><div><span>FILE SIZE</span><strong id="send-size">—</strong></div><div><span>BLOCKS</span><strong id="send-blocks">—</strong></div><div><span>MAX. DATA RATE</span><strong id="send-rate">—</strong></div></div>
+        <p class="stage-note" id="send-note">Missed frames come around again. The receiver keeps what it already has.</p>
+      </div>
+    </section>
+
+    <section id="receive-panel" class="workspace" aria-label="Receive a file" hidden>
+      <div class="controls">
+        <div class="section-heading"><span class="step-number">01</span><h2>Point your camera</h2></div>
+        <p class="receive-intro">Keep the entire QR code in view. Beam collects the pieces in any order.</p>
+        <button id="camera-start" class="primary">Start camera <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6l2-3h4l2 3h5v14H3V6z"/><circle cx="12" cy="12" r="4"/></svg></button>
+        <label id="camera-label" class="field-label camera-label" for="camera-select" hidden>Camera</label><select id="camera-select" hidden aria-label="Camera"></select>
+        <p id="receive-message" class="message" role="status">Camera access is requested only when you start.</p>
+        <div class="receive-progress"><div class="progress-title"><span id="receive-title">Waiting for a file</span><strong id="percent">0%</strong></div><progress id="progress" value="0" max="100" aria-label="Received blocks">0%</progress><div class="progress-detail"><span id="received-count">0 blocks collected</span><button id="clear-receive" class="text-button" disabled>Clear</button></div></div>
+        <div id="verified" class="verified" hidden><span class="verified-icon">✓</span><div><strong>File verified</strong><p>The SHA-256 checksum matches.</p></div></div>
+        <a id="download" class="primary download" hidden>Save verified file <span aria-hidden="true">↓</span></a>
+        <div id="received-text-wrap" hidden><label class="field-label" for="received-text">Verified text</label><textarea id="received-text" readonly rows="5"></textarea><button id="copy-text" class="secondary">Copy text</button></div>
+        <p class="hint">You can pause the camera and resume. Keep this tab open to retain your progress.</p>
+        <div class="local-note">Camera frames are processed on this device.</div>
+      </div>
+      <div class="stage-column">
+        <div class="stage camera-stage"><div class="stage-toolbar"><span id="camera-status" class="status-label">CAMERA OFF</span><span id="decoder-label" class="tiny-label"></span></div><video id="video" autoplay muted playsinline hidden aria-label="Receiver camera preview"></video><div id="camera-empty" class="empty-code"><div class="viewfinder camera-finder"><svg viewBox="0 0 80 80" aria-hidden="true"><path d="M24 22l6-9h20l6 9h15v43H9V22z"/><circle cx="40" cy="42" r="14"/></svg></div><h3>Catch the signal.</h3><p>Start your camera, then aim it<br>at the sender’s screen.</p></div><div class="stage-bottom"><span id="receive-file">No signal yet</span><span id="receive-activity">READY TO SCAN</span></div></div>
+        <div class="metrics"><div><span>RECEIVED</span><strong id="receive-bytes">—</strong></div><div><span>RECOVERED</span><strong id="recovered">0 blocks</strong></div><div><span>RECEIVE RATE</span><strong id="receive-rate">—</strong></div></div>
+        <p class="stage-note" id="receive-note">A download becomes available only after the complete file passes verification.</p>
+      </div>
+    </section>
+    <details class="help"><summary>How to get a reliable transfer <span aria-hidden="true">+</span></summary><div class="help-content"><p><strong>1. Open Beam on both devices.</strong> Choose Send for a document, any file, or pasted text. Choose Receive on the device with the camera. Use HTTPS or localhost for camera access.</p><p><strong>2. Start the camera, then the signal.</strong> Keep the code large, square to the camera, and free of glare. For more speed, select two codes and fullscreen, then keep both codes in view. Use one code or a lower speed if the camera struggles.</p><p><strong>3. Wait for “File verified”.</strong> The sender repeats until you pause it. A one-way visual link cannot tell the sender when the receiver has finished.</p><p>Verified text can be copied or saved as a .txt file. Best for small documents. Optical speed depends on your camera, screen, and lighting. Refreshing this page clears transfer progress. Anyone who can see the codes can read the file.</p></div></details>
+  </main>
+  <footer><a href="./beam-transfer.zip" download>Download source</a><span id="offline-state">Browser-only transfer</span></footer>
+  <noscript>Beam needs JavaScript to encode and receive files.</noscript>
+</body>
+</html>
